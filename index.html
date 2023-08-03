@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Recipe</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/app.js" defer></script>
+</head>
+<body>
+    <div class="wrap">
+     <!-- 네비게이션바  -->
+     <header>
+        <nav>
+            <div class="home">Home</div>
+            <div class="menubar">
+                <div class="mode">
+                    <span class="material-symbols-outlined">toggle_on</span>
+                    <span class="material-symbols-outlined show">toggle_off</span>
+                </div>
+                <div class="profile">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzHQv_th9wq3ivQ1CVk7UZRxhbPq64oQrg5Q&usqp=CAU" alt="profile">
+                </div>
+            </div>
+        </nav>
+     </header>
+     <!-- 검색화면  -->
+     <section class="mainpage">
+        <div class="text">
+        <h1>Find Meals For Your Ingredient</h1>
+        <p>Real food doesn't have ingredients,real food is ingredients</p>
+        <p>-Jamie Oliver</p>
+    </div>
+    <div class="search-word">
+    <input type="search"  id="search_food" name="search_food" placeholder="Enter an ingredient">
+    <label for="search_food" id="search_food">
+    <span class="material-symbols-outlined">
+        search
+    </span>
+    </label>
+   
+    </div>
+    <h2>Your Search Results:</h2>
+     </section>
+
+     <!-- 검색결과 -->
+     <section class="foodlist"></section>
+    </div>
+</body>
+</html>
