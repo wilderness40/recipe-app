@@ -2,17 +2,32 @@
 const wrap = document.querySelector('.wrap')  // 컨텐츠 전체를 감싸고 있는 wrap
 const foodList = document.querySelector('.foodlist')  // 카드이미지 보이는 section
 
+
+const isEmpty = (input) => {
+    if(
+        typeof input === 'undefined' ||  // undefinde 타입
+        input === null || // null 값
+        input === '' || // 빈 문자열 
+        input === 'null' || // 문자열 null
+        input.length === 0 || // 빈 배열
+        (typeof input === 'object' && !Object.keys(input).length) // 빈 객체 / Object.keys(obj) 
+    ) {
+        return true
+    }
+    else return false
+}
 let inputKeyword = null  // 검색어 업데이트를 위한 전역변수
 let defalutReults = []  // 처음에 보이는 화면의 데이터를 담는 변수
 let searchResults = []  // 검색내용 업데이트를 위한 전역변수
+let updateResult = [] // 검색내용 업데이트를 위한 전역변수 2 / 뭔가 잘못된듯.. 2개가 필요할거같지는 않은데
 let newResult = []  // 모달윈도우용..
 
 /* food리스트 생성 마운트 함수  - 시작 */
 function displayElement(data){
     let foodDiv = document.createElement('div')
     foodDiv.className = 'food-card'
-    foodDiv.id =`${data.idMeal}` // 실제로 부여를 해줘야하는구나..
-   
+    foodDiv.id = `${data.idMeal}`
+    
     let imgFrame = document.createElement('div')
     imgFrame.className = 'img-frame'
 
@@ -31,45 +46,40 @@ function displayElement(data){
 /* food리스트 생성 마운트 함수  - 끝 */
 
 /* 모달윈도우 생성 마운트 함수 - 시작 */
-function createModal(data, clickID){
-// console.log(data, dataId)
-for(let i = 0; i < data.length; i++){
-if( data[i].idMeal == clickID ){
-    let showModal = document.createElement('div')
-    showModal.className = 'modal-window'
-    showModal.innerHTML = `<button>X</button>`
-         
-    let modalText = document.createElement('div')
-    modalText.className = 'modal-text'
-    modalText.innerHTML = `<h3>${data[i].strMeal}</h3> <br/> <h4>${data[i].strCategory}</h4> <br/> <h5>Instructions:</h5> <br/> <p>${data[i].strInstructions}</p>` 
-    
-    let modalImgBox = document.createElement('div')
-    modalImgBox.className = 'modal-imgbox'
-    modalImgBox.innerHTML = `<img src=${data[i].strMealThumb} class ='modal-img' alt='thumbnailImg'> <br/> <h5>Watch Video</h5>`
-    
-    wrap.appendChild(showModal)
-    showModal.append(modalText, modalImgBox)
+function createModal(serverData, dataId){
+  for(let i =0; i < serverData.length; i++){  
+  if(serverData[i].idMeal == dataId){
+let showModal = document.createElement('div')
+showModal.className = 'modal-window'
+showModal.innerHTML = `<button class='modal-close'>X</button>`
+     
+let modalText = document.createElement('div')
+modalText.className = 'modal-text'
+modalText.innerHTML = `<h3>${serverData[i].strMeal}</h3> <br/> <h4>${serverData[i].strCategory}</h4> <br/> <h5>Instructions:</h5> <br/> <p>${serverData[i].strInstructions}</p>` 
 
-    // 모달 내 watch 비디오 기능
-    const watchvideo = document.querySelectorAll('.modal-imgbox h5')
-    console.log(watchvideo)
-    for (let video of watchvideo) {
-    video.addEventListener('click', (e) => {
-    e.stopPropagation()
-    console.log(watchvideo, e.target)
+let modalImgBox = document.createElement('div')
+modalImgBox.className = 'modal-imgbox'
+modalImgBox.innerHTML = `<img src=${serverData[i].strMealThumb} class ='modal-img' alt='thumbnailImg'> <br/> <h5 class='watch-video'>Watch Video</h5>`
 
-    let videoFrame = document.createElement('div')
-    videoFrame.className = 'video-frame'
-    videoFrame.innerHTML = `<iframe width="560" height="315" src=${data[i].strYoutube} title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>` // corb오류 -> video태그가 아니라 iframe 태그를 활용?
-   
-    showModal.appendChild(videoFrame)
-    
+wrap.appendChild(showModal)
+showModal.append(modalText, modalImgBox)
+
+// 모달 내 watch 비디오 기능
+const watchvideoBtns = document.querySelectorAll('.modal-imgbox h5')
+for (const btn of watchvideoBtns){
+    btn.addEventListener('click', (event) => { // foodList로 이벤트 위임하니까 console.log(event.target)자체가 먹지를 않는다, 모달 오픈 버튼에서 이미 사용해서 그런가? 
+    console.log(event.target)
+
+ let videoFrame = document.createElement('div')
+ videoFrame.className = 'video-frame'
+ videoFrame.innerHTML = `<iframe id="player" type="text/html" width="550" height="360" src=${serverData[i].strYoutube} frameborder="0"></iframe>`
+ showModal.appendChild(videoFrame)
+
 })
 }
 }
 }
 }
-
 /* 모달윈도우 생성 마운트 함수 - 끝 */
 
 /* 서버 API 가져오기 - 시작*/
@@ -86,36 +96,27 @@ defalutReults = results.meals
 searchResults = [...results.meals]    
 
 /* GetReipe클릭시 모달창 나오는 기능 - 시작 */
-/* 문제점 : 반복문의 문제? / 이벤트 위임?
-1. 버튼 8개가 전부 호출된다.
-2. modal-windwo 8개가 전부 호출된다
-3. 서버 data 전부가 한 모달창에 입력이 된다
-4. 검색이후 결과에 대한 모달도 따로 작업이 필요하다?
-*/
-const modalOpenBtn = document.querySelectorAll('.food-text button')
-const foodName = document.querySelector('.food-text h3')
-
-    for (const btn of modalOpenBtn){
-        btn.addEventListener('click', (e)=> { // 버튼 클릭이벤트
-        e.stopPropagation()
-
-        // console.log(e.target.parentElement.firstElementChild.innerText) // 디버깅용
-        // e.target.parentElement.parentElement.id
-       createModal(defalutReults, e.target.parentElement.parentElement.id)
-        //   console.log(clickId)    
-
-        //   모달닫기 버튼 기능
-      const modalWindow = document.querySelectorAll('.modal-window')
-
-        if(modalWindow){
-            const modalCloseBtn = document.querySelector('.modal-window button') // 이건 한창이 열려있을때는 닫기버튼은 한개이므로 All을 안썼다, 맞는지는 모름..
-            modalCloseBtn.addEventListener('click',() => {
-            modalWindow[0].remove() 
-            console.log(modalWindow) // 왜 Nodelist로 출력이되는거지, queryselectroAll은 원래 유사배열을 가져온다
+// const modalOpenBtn = document.querySelectorAll('.food-text button')
+        foodList.addEventListener('click', (e)=> { // 버튼 클릭이벤트
+        if(e.target.className = 'modal-open') {   
+        let dataId = e.target.parentElement.parentElement.id
+            createModal(defalutReults, dataId)
+        
+            //   모달닫기 버튼 기능
+            const modalWindows = document.querySelectorAll('.modal-window')
+            for(const modalWindow of modalWindows){ 
+                console.log(modalWindow)
+            if(modalWindow){ 
+                const modalCloseBtn = document.querySelector('.modal-window button') // 이건 한창이 열려있을때는 닫기버튼은 한개이므로 All을 안썼다, 맞는지는 모름..                
+                modalCloseBtn.addEventListener('click',(e) => {
+                e.stopPropagation()
+                modalWindow.remove() 
+                // console.log(modalWindow.remove() ) // 왜 Nodelist로 출력이되는거지, queryselectroAll은 원래 유사배열을 가져온다
             }) 
-            }
-})  
-    }    
+                }
+            }    
+        }
+        })
 /* GetReipe클릭시 모달창 나오는 기능 - 끝 */
 }
 getServerData()
@@ -123,29 +124,31 @@ getServerData()
 
 /* 검색기능 - 시작 */
 const inputWindow = document.querySelector('.search-word input') // 전역변수
-
-function searchFood(e){
-  inputKeyword = e.target.value.trim()
-  console.log(inputKeyword.toLowerCase())
-  
-  function findFoods(food){
+// 재검색할때는 이미 검색된 화면 기준에서 검색을 하기 떄문에 아이템이 나오지 않는다
+function findFoods(food){
     if(inputKeyword){
         return food.strMeal.toLowerCase().includes(inputKeyword.toLowerCase())
-    }
+    } else if(isEmpty) return food
   }
-  searchResults = searchResults.filter(findFoods)
 
+function searchFood(e){
+    e.stopPropagation() 
+  inputKeyword = e.target.value.trim()
+  console.log(inputKeyword.toLowerCase())
+  updateResult = searchResults.filter(findFoods)
+
+  
   // 기존 내용 초기화
   foodList.innerHTML = ''
   e.target.value = '' 
 
   // 검색내용 마운트해서 보여주기
-  for(let i = 0; i < searchResults.length; i++){
-    displayElement(searchResults[i])
-    createModal(searchResults[i])
+  for(let i = 0; i < updateResult.length; i++){
+    displayElement(updateResult[i])
   }
 }
 inputWindow.addEventListener('change', searchFood)
+
 /* 검색기능 - 끝 */
 
 /* 무한스크롤 기능 - 시작 */
@@ -159,12 +162,12 @@ window.addEventListener('scroll', () => {
     if(Math.abs(window.scrollY + document.documentElement.clientHeight - scrollHeight) < 100){
         // console.log('스크롤 바닥') // 디버깅용
         if(inputKeyword) {
+            for(let i = 0; i < updateResult.length; i++){
+                displayElement(updateResult[i])
+              }
+        } else if(isEmpty){
             for(let i = 0; i < searchResults.length; i++){
                 displayElement(searchResults[i])
-              }
-        } else{
-            for(let i = 0; i < defalutReults.length; i++){
-                displayElement(defalutReults[i])
           }
         }
     }

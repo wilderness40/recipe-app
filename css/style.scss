@@ -108,6 +108,7 @@ header nav .menubar .profile img{
     left: 22.4375rem;
     top: -2.5rem;
     border-radius: 0 3rem 3rem 0;
+    cursor: pointer;
 }
 // 동적데이터 디자인
 .foodlist{
@@ -244,6 +245,9 @@ header nav .menubar .profile img{
 .video-frame{
     width: 600px;
     height: 600px;
+    position: fixed;
+    top: 50%; left: 5%;
+    // translate: (-50%, -50%);
 }
 @media (max-width:420px) {
     .search-word input{
