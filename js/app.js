@@ -2,20 +2,22 @@
 const wrap = document.querySelector('.wrap')  // 컨텐츠 전체를 감싸고 있는 wrap
 const foodList = document.querySelector('.foodlist')  // 카드이미지 보이는 section
 
-
-const isEmpty = (input) => {
+/* 전역변수 - 입력창에 검색어가 없을 경우 - 시작 */
+const isEmpty = (inputKeyword) => { 
     if(
-        typeof input === 'undefined' ||  // undefinde 타입
-        input === null || // null 값
-        input === '' || // 빈 문자열 
-        input === 'null' || // 문자열 null
-        input.length === 0 || // 빈 배열
-        (typeof input === 'object' && !Object.keys(input).length) // 빈 객체 / Object.keys(obj) 
+        typeof inputKeyword === 'undefined' ||  // undefinde 타입
+        inputKeyword === null || // null 값
+        inputKeyword === '' || // 빈 문자열 
+        inputKeyword === 'null' || // 문자열 null
+        inputKeyword.length === 0 || // 빈 배열
+        (typeof inputKeyword === 'object' && !Object.keys(inputKeyword).length) // 빈 객체 / Object.keys(obj) 
     ) {
         return true
     }
     else return false
 }
+/* 입력창에 검색어가 없을경우 - 끝 */
+
 let inputKeyword = null  // 검색어 업데이트를 위한 전역변수
 let defalutReults = []  // 처음에 보이는 화면의 데이터를 담는 변수
 let searchResults = []  // 검색내용 업데이트를 위한 전역변수
@@ -24,24 +26,26 @@ let newResult = []  // 모달윈도우용..
 
 /* food리스트 생성 마운트 함수  - 시작 */
 function displayElement(data){
+    for (let i = 0; i < data.length; i++) {
     let foodDiv = document.createElement('div')
     foodDiv.className = 'food-card'
-    foodDiv.id = `${data.idMeal}`
+    foodDiv.id = `${data[i].idMeal}`
     
     let imgFrame = document.createElement('div')
     imgFrame.className = 'img-frame'
 
     let foodImg = document.createElement('img')
     foodImg.className = 'food-img'
-    foodImg.src = data.strMealThumb
+    foodImg.src = data[i].strMealThumb
     
     let foodText = document.createElement('div')
     foodText.className = 'food-text'
-    foodText.innerHTML = `<h3>${data.strMeal}</h3> <br/> <button class=modal-open>Get Recipe</button>`
+    foodText.innerHTML = `<h3>${data[i].strMeal}</h3> <br/> <button class=modal-open>Get Recipe</button>`
 
     foodList.appendChild(foodDiv)
     foodDiv.append(imgFrame, foodText)
     imgFrame.appendChild(foodImg)
+}
 }
 /* food리스트 생성 마운트 함수  - 끝 */
 
@@ -86,14 +90,13 @@ for (const btn of watchvideoBtns){
 async function getServerData() {
     let results = await fetch('https://www.themealdb.com/api/json/v1/1/search.php?s=egg')
     .then(reponse => reponse.json())
-    console.log(results, results.meals)
-
+    // console.log(results, results.meals) // 디버깅용
     // 데이터 보여주기
-    for(let i = 0; i < results.meals.length; i++){
-    displayElement(results.meals[i])    
-}
-defalutReults = results.meals
-searchResults = [...results.meals]    
+     displayElement(results.meals)    
+
+    // 서버데이터 변수 업데이트
+     defalutReults = results.meals
+     searchResults = [...results.meals]    
 
 /* GetReipe클릭시 모달창 나오는 기능 - 시작 */
 // const modalOpenBtn = document.querySelectorAll('.food-text button')
@@ -111,7 +114,6 @@ searchResults = [...results.meals]
                 modalCloseBtn.addEventListener('click',(e) => {
                 e.stopPropagation()
                 modalWindow.remove() 
-                // console.log(modalWindow.remove() ) // 왜 Nodelist로 출력이되는거지, queryselectroAll은 원래 유사배열을 가져온다
             }) 
                 }
             }    
@@ -124,7 +126,7 @@ getServerData()
 
 /* 검색기능 - 시작 */
 const inputWindow = document.querySelector('.search-word input') // 전역변수
-// 재검색할때는 이미 검색된 화면 기준에서 검색을 하기 떄문에 아이템이 나오지 않는다
+// 재검색할때는 이미 검색된 화면 기준에서 검색을 하기 떄문에 아이템이 나오지 않는다 => 해결이 됐는데 왜 된건지 모르겠다 뭘 한게없는데?
 function findFoods(food){
     if(inputKeyword){
         return food.strMeal.toLowerCase().includes(inputKeyword.toLowerCase())
@@ -132,22 +134,32 @@ function findFoods(food){
   }
 
 function searchFood(e){
-    e.stopPropagation() 
+  e.stopPropagation() 
   inputKeyword = e.target.value.trim()
   console.log(inputKeyword.toLowerCase())
   updateResult = searchResults.filter(findFoods)
 
-  
   // 기존 내용 초기화
   foodList.innerHTML = ''
   e.target.value = '' 
 
   // 검색내용 마운트해서 보여주기
-  for(let i = 0; i < updateResult.length; i++){
-    displayElement(updateResult[i])
-  }
+    displayElement(updateResult)
 }
 inputWindow.addEventListener('change', searchFood)
+/* 검색창이 비어있을 때 enter키 입력시 처음화면으로 보여준다 - 시작 */
+inputWindow.addEventListener('keydown', (e) => { 
+    // keydown으로 하니까 해결됨, keyup은 change와 충돌함. 
+    // keydown은 누르는 순간 인식해서 먼저 발생하고, change는 나중에 입력되므로 덮어씌워진다
+    console.log(e.keyCode)
+    if(e.keyCode == 13) {
+        console.log(e.keyCode) 
+        // e.stopPropagation()
+        foodList.innerHTML = ''
+        displayElement(searchResults)
+}
+})
+/* 검색창이 비어있을 때 enter키 입력시 처음화면으로 보여준다 - 끝 */
 
 /* 검색기능 - 끝 */
 
@@ -161,15 +173,8 @@ window.addEventListener('scroll', () => {
     
     if(Math.abs(window.scrollY + document.documentElement.clientHeight - scrollHeight) < 100){
         // console.log('스크롤 바닥') // 디버깅용
-        if(inputKeyword) {
-            for(let i = 0; i < updateResult.length; i++){
-                displayElement(updateResult[i])
-              }
-        } else if(isEmpty){
-            for(let i = 0; i < searchResults.length; i++){
-                displayElement(searchResults[i])
-          }
-        }
+        if(inputKeyword) { displayElement(updateResult)} 
+        else if(isEmpty()) { displayElement(searchResults)}
     }
 }
 )
